@@ -80,8 +80,8 @@ modalCart.addEventListener('click', e => {
 
 
 //view all, goods
-const more = document.querySelector('.more');
-const navigationLink = document.querySelectorAll('.navigation-link');
+const viewAll = document.querySelectorAll('.view-all');
+const navigationLink = document.querySelectorAll('.navigation-link:not(.view-all)');// исключение, чтобы элементы с этим классом   	.view-all не попадали в querySelectorAll
 const longGoodsList = document.querySelector('.long-goods-list');//скрыт
 
 
@@ -132,10 +132,15 @@ const renderCards = function (data) {
 	document.body.classList.add('show-goods');
 };
 
-more.addEventListener('click', e => {//открыть все товары
+const showAll = (e) => {
 	e.preventDefault();
 	getGoods().then(renderCards);
-});
+};
+
+viewAll.forEach(function(elem) {
+	elem.addEventListener('click', showAll);
+})
+
 
 
 //фильтр одежды
@@ -155,9 +160,6 @@ navigationLink.forEach(link => {
 		e.preventDefault();
 		const field = link.dataset.field;
 		const value = link.textContent;
-		if (value === 'All') {
-			return getGoods().then(renderCards);
-		}
 		filterCards(field, value);
 	});
 });
