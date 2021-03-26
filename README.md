@@ -1,2 +1,2 @@
-<!-- [project](https://diazdressk.github.io/willberries/) -->
+[project](https://diazdressk.github.io/willberries/)
 <!-- gh-pages -->
