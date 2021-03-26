@@ -68,6 +68,12 @@ button {
     
 }
 
+.button-clear {
+    background-color: rgb(250, 107, 107);
+    display: block;
+    margin-left: auto;
+}
+
 .cart-count {
     margin-left: 10px;
 }

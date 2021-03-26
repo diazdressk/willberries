@@ -1,12 +1,5 @@
-const mySwiper = new Swiper('.swiper-container', {
-	loop: true,
-
-	// Navigation arrows
-	navigation: {
-		nextEl: '.slider-button-next',
-		prevEl: '.slider-button-prev',
-	},
-});
+import './modules/swiper.js';
+import './modules/scroll.js';
 
 //cart
 const buttonCart = document.querySelector('.button-cart');
@@ -14,11 +7,11 @@ const modalCart = document.querySelector('#modal-cart');
 //view all, goods
 const viewAll = document.querySelectorAll('.view-all');
 const navigationLink = document.querySelectorAll('.navigation-link:not(.view-all)');// исключение, чтобы элементы с этим классом   	.view-all не попадали в querySelectorAll
-const longGoodsList = document.querySelector('.long-goods-list');//скрыт
-const showAccessories = document.querySelectorAll('.show-accessories');
-const showClothing = document.querySelectorAll('.show-clothing');
+const longGoodsList = document.querySelector('.long-goods-list');
 const cartTableGoods = document.querySelector('.cart-table__goods');
 const cardTableTotal = document.querySelector('.card-table__total');
+const cartCount = document.querySelector('.cart-count');
+const buttonClear = document.querySelector('.button-clear');
 
 
 //получать товары с сервера
@@ -30,19 +23,19 @@ const getGoods = async () => {
 	return await res.json();
 }
 
-// fetch('db/db.json')
-// 	.then(response => {
-// 		return response.json();
-// 	})
-// 	.then(data => {
-// 		console.log(data);
-// 	})
-
-
-
-//карточка корзина
+// корзина
 const cart = {
 	cartGoods: [],
+	cartGoodsCounter() {//колво всех товаров в корзине
+		cartCount.textContent = this.cartGoods.reduce((sum, item) => {
+			return sum + item.count;
+		}, 0);
+	},
+	clearCart() {
+		this.cartGoods.length = 0;
+		this.cartGoodsCounter();
+		this.renderCart();
+	},
 	renderCart() {
 		cartTableGoods.textContent = '';
 		this.cartGoods.forEach(({ id, name, price, count }) => {//таблица корзины
@@ -68,11 +61,12 @@ const cart = {
 
 		cardTableTotal.textContent = totalPrice + '$';
 	},
-	deleteGood(id) {
+	deleteGood(id) {//удаление товара из корзины
 		this.cartGoods = this.cartGoods.filter(item => id !== item.id);
 		this.renderCart();
+		this.cartGoodsCounter();
 	},
-	minusGood(id) {
+	minusGood(id) {//уменьшение колва товаров
 		for (const item of this.cartGoods) {
 			if (item.id === id) {
 				if (item.count <= 1) {
@@ -84,8 +78,9 @@ const cart = {
 			}
 		}
 		this.renderCart();
+		this.cartGoodsCounter();
 	},
-	plusGood(id) {
+	plusGood(id) {//увеличение колва товаров
 		for (const item of this.cartGoods) {
 			if (item.id === id) {
 				item.count += 1;
@@ -93,8 +88,9 @@ const cart = {
 			} 
 		}
 		this.renderCart();
+		this.cartGoodsCounter();
 	},
-	addCartGoods(id){
+	addCartGoods(id){//добавление товара
 		const goodItem = this.cartGoods.find(item => item.id === id);
 		if (goodItem) {
 			this.plusGood(id);
@@ -108,12 +104,18 @@ const cart = {
 						price,
 						count: 1,
 					});
+					this.cartGoodsCounter();
 				});
 		}
 	},
 }
 
-document.body.addEventListener('click', e => {//Добавление в корзину через бади делегированием
+// buttonClear.addEventListener('click', cart.clearCart.bind(cart));//очищение корзины
+buttonClear.addEventListener('click', () => {
+	cart.clearCart();
+});//очищение корзины
+
+document.body.addEventListener('click', e => {//кнопка Добавления в корзину через бади делегированием
 	const addToCart = e.target.closest('.add-to-cart');//поднимается до адтукарт,спан и батон вместе
 	if (addToCart) {
 		cart.addCartGoods(addToCart.dataset.id);
@@ -153,59 +155,9 @@ modalCart.addEventListener('click', e => {
 	}
 });
 
-
-//scroll
-// (function() {//скроллер
-// 	const  scrollLinks = document.querySelectorAll('a.scroll-link');//все ссылки с классом
-
-// 	for (let i = 0; i < scrollLinks.length; i += 1) {
-// 		scrollLinks[i].addEventListener('click', e => {
-// 			e.preventDefault();
-// 			const id = scrollLinks[i].getAttribute('href');//#body
-// 			document.querySelector(id).scrollIntoView({
-// 				behavior: "smooth",
-// 				block: 'start',
-// 			})
-// 		});
-// 	}
-// })()
-
-
-// {//новый способ самовызывающейся функции
-// 	const  scrollLinks = document.querySelectorAll('a.scroll-link');//все ссылки с классом
-
-// 	for (let i = 0; i < scrollLinks.length; i += 1) {
-// 		scrollLinks[i].addEventListener('click', e => {
-// 			e.preventDefault();
-// 			const id = scrollLinks[i].getAttribute('href');//#body
-// 			document.querySelector(id).scrollIntoView({
-// 				behavior: "smooth",
-// 				block: 'start',
-// 			})
-// 		});
-// 	}
-// }
-
-// 2
-{
-	const  scrollLinks = document.querySelectorAll('a.scroll-link');//все ссылки с классом
-
-	for (const scrollLink of scrollLinks) {
-		scrollLink.addEventListener('click', e => {
-			e.preventDefault();
-			const id = scrollLink.getAttribute('href');//#body
-			document.querySelector(id).scrollIntoView({
-				behavior: "smooth",
-				block: 'start',
-			})
-		});
-	}
-}
-
 const createCard = (objCard) => {//создаю карточку
 	const card = document.createElement('div');
 	card.className = 'col-lg-3 col-sm-6';
-	console.log(objCard)
 	card.innerHTML = `
 		<div class="goods-card">
 			${objCard.label ? `<span class="label">${objCard.label}</span>` : ''}
@@ -231,12 +183,12 @@ const renderCards = (data) => {
 	document.body.classList.add('show-goods');
 };
 
-const showAll = (e) => {
+const showAll = (e) => {//функция показывания
 	e.preventDefault();
 	getGoods().then(renderCards);
 };
 
-viewAll.forEach(elem => {
+viewAll.forEach(elem => {// All
 	elem.addEventListener('click', showAll);
 })
 
@@ -250,7 +202,7 @@ const filterCards = (field, value) => {
 };
 
 
-navigationLink.forEach(link => {
+navigationLink.forEach(link => {// Womens, Mens
 	link.addEventListener('click', e => { 
 		e.preventDefault();
 		const field = link.dataset.field;
@@ -259,15 +211,35 @@ navigationLink.forEach(link => {
 	});
 });
 
-showAccessories.forEach(item => {
-	item.addEventListener('click', e => {
-		e.preventDefault();
-		filterCards('category', 'Accessories');
-	});
+
+
+//отправка на сервер
+const modalForm = document.querySelector('.modal-form');
+
+const postData = dataUser => fetch('server.php', {
+	method: 'POST',
+	body: dataUser,
 });
-showClothing.forEach(item => {
-	item.addEventListener('click', e => {
-		e.preventDefault();
-		filterCards('category', 'Clothing');
-	});
+
+modalForm.addEventListener('submit', e => {
+	e.preventDefault();
+	const formData = new FormData(modalForm);
+	formData.append('goods', JSON.stringify(cart.cartGoods));
+
+	postData(formData)
+		.then(response => {
+			if (!200 || !response.ok) {
+				throw new Error(response.status);
+			}
+			alert('Заказ получен, свяжусь с вами');
+		})
+		.catch(err => {
+			alert('Ошибка');
+			console.log(err);
+		})
+		.finally(() => {
+			closeModal();//закрываю корзину
+			modalForm.reset();//очищаю форму
+			cart.cartGoods.length = 0;//очищаю товары
+		})
 });
